@@ -221,7 +221,7 @@ function createBarPlot(data) {
       
     // Add the legend
     const legend = svg.append("g")
-        .attr("transform", `translate(${width - 150}, ${margin.top})`);
+        .attr("transform", `translate(${width - 100}, 10)`);  // Moved legend inside the chart area
     const types = postTypes;  // Use postTypes instead of extracting from data
  
     types.forEach((type, i) => {
@@ -337,4 +337,5 @@ function createLinePlot(data) {
         .attr("r", 4)
         .attr("fill", "steelblue");
 }
+
 
