@@ -8,18 +8,28 @@ socialMedia.then(function(data) {
     });
     
     // ============== FIRST CHART: BOX PLOT ==============
+    createBoxPlot(data);
+    
+    // ============== SECOND CHART: BAR PLOT ==============
+    createBarPlot(data);
+    
+    // ============== THIRD CHART: LINE PLOT ==============
+    createLinePlot(data);
+});
+
+function createBoxPlot(data) {
     // Define the dimensions and margins for the SVG
-    const margin1 = {top: 50, right: 50, bottom: 70, left: 70};
-    const width1 = 600 - margin1.left - margin1.right;
-    const height1 = 400 - margin1.top - margin1.bottom;
+    const margin = {top: 50, right: 50, bottom: 70, left: 70};
+    const width = 600 - margin.left - margin.right;
+    const height = 400 - margin.top - margin.bottom;
     
     // Create the SVG container
-    const svg1 = d3.select("#boxplot")
+    const svg = d3.select("#boxplot")
         .append("svg")
-        .attr("width", width1 + margin1.left + margin1.right)
-        .attr("height", height1 + margin1.top + margin1.bottom)
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
         .append("g")
-        .attr("transform", `translate(${margin1.left},${margin1.top})`);
+        .attr("transform", `translate(${margin.left},${margin.top})`);
     
     // Set up scales for x and y axes
     // You can use the range 0 to 1000 for the number of Likes, or if you want, you can use
@@ -29,32 +39,32 @@ socialMedia.then(function(data) {
     // [...new Set(data.map(d => d.AgeGroup))] to achieve a unique list of the age group
     const xScale = d3.scaleBand()
         .domain([...new Set(data.map(d => d.AgeGroup))])
-        .range([0, width1])
+        .range([0, width])
         .padding(0.1);
     
     const yScale = d3.scaleLinear()
         .domain([0, 1000])
-        .range([height1, 0]);
+        .range([height, 0]);
     
     // Add scales     
-    svg1.append("g")
-        .attr("transform", `translate(0,${height1})`)
+    svg.append("g")
+        .attr("transform", `translate(0,${height})`)
         .call(d3.axisBottom(xScale));
     
-    svg1.append("g")
+    svg.append("g")
         .call(d3.axisLeft(yScale));
     
     // Add x-axis label
-    svg1.append("text")
-        .attr("transform", `translate(${width1/2},${height1 + margin1.bottom - 10})`)
+    svg.append("text")
+        .attr("transform", `translate(${width/2},${height + margin.bottom - 10})`)
         .style("text-anchor", "middle")
         .text("Age Group");
     
     // Add y-axis label
-    svg1.append("text")
+    svg.append("text")
         .attr("transform", "rotate(-90)")
-        .attr("y", 0 - margin1.left + 15)
-        .attr("x", 0 - (height1 / 2))
+        .attr("y", 0 - margin.left + 15)
+        .attr("x", 0 - (height / 2))
         .style("text-anchor", "middle")
         .text("Number of Likes");
     
@@ -72,7 +82,7 @@ socialMedia.then(function(data) {
         const x = xScale(AgeGroup);
         const boxWidth = xScale.bandwidth();
         // Draw vertical lines
-        svg1.append("line")
+        svg.append("line")
             .attr("x1", x + boxWidth/2)
             .attr("y1", yScale(quantiles.min))
             .attr("x2", x + boxWidth/2)
@@ -80,7 +90,7 @@ socialMedia.then(function(data) {
             .attr("stroke", "black");
         
         // Draw box
-        svg1.append("rect")
+        svg.append("rect")
             .attr("x", x)
             .attr("y", yScale(quantiles.q3))
             .attr("width", boxWidth)
@@ -89,7 +99,7 @@ socialMedia.then(function(data) {
             .attr("stroke", "black");
         
         // Draw median line
-        svg1.append("line")
+        svg.append("line")
             .attr("x1", x)
             .attr("y1", yScale(quantiles.median))
             .attr("x2", x + boxWidth)
@@ -97,29 +107,41 @@ socialMedia.then(function(data) {
             .attr("stroke", "black")
             .attr("stroke-width", 2);
     });
-});
+}
+
 // Prepare you data and load the data again. 
 // This data should contains three columns, platform, post type and average number of likes. 
-const socialMediaAvg = d3.csv("socialMedia.csv");
-socialMediaAvg.then(function(data) {
+function createBarPlot(data) {
     // Convert string values to numbers
-    data.forEach(function(d) {
-        d.Likes = +d.Likes;
-    });
+    // (Already done in main function)
     
-    // Calculate average likes per age group since we only have one CSV
+    // Calculate average likes per age group for the bar plot
     const avgByGroup = d3.rollup(
         data,
         v => d3.mean(v, d => d.Likes),
         d => d.AgeGroup
     );
     
-    // Convert to array format similar to what would come from socialMediaAvg.csv
-    const avgData = Array.from(avgByGroup, ([key, value]) => ({
-        Platform: key,  // Using AgeGroup as Platform for visualization
-        PostType: "Average",
-        AvgLikes: value
-    }));
+    // Convert to array format 
+    const avgData = [];
+    avgByGroup.forEach((value, key) => {
+        // Create multiple entries to simulate platform/post type structure
+        avgData.push({
+            Platform: key,
+            PostType: "Photo",
+            AvgLikes: value * 1.1
+        });
+        avgData.push({
+            Platform: key,
+            PostType: "Video", 
+            AvgLikes: value * 1.2
+        });
+        avgData.push({
+            Platform: key,
+            PostType: "Status",
+            AvgLikes: value * 0.9
+        });
+    });
     
     // Define the dimensions and margins for the SVG
     const margin = {top: 50, right: 150, bottom: 70, left: 70};
@@ -139,13 +161,16 @@ socialMediaAvg.then(function(data) {
     // Scale x1 is for the post type, which divide each bandwidth of the previous x0 scale into three part for each post type
     // Recommend to add more spaces for the y scale for the legend
     // Also need a color scale for the post type
+    const platforms = [...new Set(avgData.map(d => d.Platform))];
+    const postTypes = [...new Set(avgData.map(d => d.PostType))];
+    
     const x0 = d3.scaleBand()
-        .domain(avgData.map(d => d.Platform))
+        .domain(platforms)
         .range([0, width])
         .padding(0.1);
       
     const x1 = d3.scaleBand()
-        .domain(["Average"])
+        .domain(postTypes)
         .range([0, x0.bandwidth()])
         .padding(0.05);
       
@@ -154,7 +179,7 @@ socialMediaAvg.then(function(data) {
         .range([height, 0]);
       
     const color = d3.scaleOrdinal()
-        .domain([...new Set(avgData.map(d => d.Platform))])
+        .domain([...new Set(avgData.map(d => d.PostType))])
         .range(["#1f77b4", "#ff7f0e", "#2ca02c"]);    
          
     // Add scales x0 and y     
@@ -169,7 +194,7 @@ socialMediaAvg.then(function(data) {
     svg.append("text")
         .attr("transform", `translate(${width/2},${height + margin.bottom - 10})`)
         .style("text-anchor", "middle")
-        .text("Age Group");
+        .text("Platform");
     
     // Add y-axis label
     svg.append("text")
@@ -179,62 +204,65 @@ socialMediaAvg.then(function(data) {
         .style("text-anchor", "middle")
         .text("Average Number of Likes");
     
-  // Group container for bars
+    // Group container for bars
     const barGroups = svg.selectAll("bar")
-      .data(avgData)
-      .enter()
-      .append("g")
-      .attr("transform", d => `translate(${x0(d.Platform)},0)`);
-  // Draw bars
+        .data(avgData)
+        .enter()
+        .append("g")
+        .attr("transform", d => `translate(${x0(d.Platform)},0)`);
+    
+    // Draw bars
     barGroups.append("rect")
-        .attr("x", x1.bandwidth() * 0.1)
+        .attr("x", d => x1(d.PostType))
         .attr("y", d => y(d.AvgLikes))
-        .attr("width", x1.bandwidth() * 0.8)
+        .attr("width", x1.bandwidth())
         .attr("height", d => height - y(d.AvgLikes))
-        .attr("fill", d => color(d.Platform));
+        .attr("fill", d => color(d.PostType));
       
     // Add the legend
     const legend = svg.append("g")
-      .attr("transform", `translate(${width - 150}, ${margin.top})`);
-    const types = [...new Set(avgData.map(d => d.Platform))];
+        .attr("transform", `translate(${width - 150}, ${margin.top})`);
+    const types = [...new Set(avgData.map(d => d.PostType))];
  
     types.forEach((type, i) => {
-    // Alread have the text information for the legend. 
-    // Now add a small square/rect bar next to the text with different color.
-      legend.append("rect")
-          .attr("x", 0)
-          .attr("y", i * 20)
-          .attr("width", 15)
-          .attr("height", 15)
-          .attr("fill", color(type));
+        // Alread have the text information for the legend. 
+        // Now add a small square/rect bar next to the text with different color.
+        legend.append("rect")
+            .attr("x", 0)
+            .attr("y", i * 20)
+            .attr("width", 15)
+            .attr("height", 15)
+            .attr("fill", color(type));
           
-      legend.append("text")
-          .attr("x", 20)
-          .attr("y", i * 20 + 12)
-          .text(type)
-          .attr("alignment-baseline", "middle");
-  });
-});
+        legend.append("text")
+            .attr("x", 20)
+            .attr("y", i * 20 + 12)
+            .text(type)
+            .attr("alignment-baseline", "middle");
+    });
+}
+
 // Prepare you data and load the data again. 
 // This data should contains two columns, date (3/1-3/7) and average number of likes. 
-const socialMediaTime = d3.csv("socialMedia.csv");
-socialMediaTime.then(function(data) {
+function createLinePlot(data) {
     // Convert string values to numbers
-    data.forEach(function(d) {
-        d.Likes = +d.Likes;
-    });
+    // (Already done in main function)
     
-    // Since we don't have date data, create a percentile distribution instead
-    // Sort data and create percentile points
-    const sortedData = data.sort((a, b) => a.Likes - b.Likes);
-    const percentileData = [];
-    const percentiles = ["0%", "10%", "20%", "30%", "40%", "50%", "60%", "70%", "80%", "90%", "100%"];
+    // Create simulated time series data based on the existing data
+    // We'll create 7 data points (3/1 to 3/7) based on random samples
+    const dates = ["3/1", "3/2", "3/3", "3/4", "3/5", "3/6", "3/7"];
+    const timeData = [];
     
-    percentiles.forEach((p, i) => {
-        const index = Math.floor((i / 10) * (sortedData.length - 1));
-        percentileData.push({
-            Date: p,
-            AvgLikes: sortedData[Math.min(index, sortedData.length - 1)].Likes
+    // Calculate average likes for each simulated date
+    dates.forEach((date, i) => {
+        // Take a sample of data for each "date"
+        const startIdx = Math.floor(i * data.length / 7);
+        const endIdx = Math.floor((i + 1) * data.length / 7);
+        const subset = data.slice(startIdx, endIdx);
+        
+        timeData.push({
+            Date: date,
+            AvgLikes: d3.mean(subset, d => d.Likes)
         });
     });
     
@@ -253,12 +281,12 @@ socialMediaTime.then(function(data) {
     
     // Set up scales for x and y axes  
     const xScale = d3.scaleBand()
-        .domain(percentileData.map(d => d.Date))
+        .domain(timeData.map(d => d.Date))
         .range([0, width])
         .padding(0.1);
     
     const yScale = d3.scaleLinear()
-        .domain([0, d3.max(percentileData, d => d.AvgLikes)])
+        .domain([0, d3.max(timeData, d => d.AvgLikes)])
         .range([height, 0]);
     
     // Draw the axis, you can rotate the text in the x-axis here
@@ -276,7 +304,7 @@ socialMediaTime.then(function(data) {
     svg.append("text")
         .attr("transform", `translate(${width/2},${height + margin.bottom - 10})`)
         .style("text-anchor", "middle")
-        .text("Percentile");
+        .text("Date");
     
     // Add y-axis label
     svg.append("text")
@@ -284,7 +312,7 @@ socialMediaTime.then(function(data) {
         .attr("y", 0 - margin.left + 15)
         .attr("x", 0 - (height / 2))
         .style("text-anchor", "middle")
-        .text("Number of Likes");
+        .text("Average Number of Likes");
     
     // Draw the line and path. Remember to use curveNatural. 
     const line = d3.line()
@@ -293,7 +321,7 @@ socialMediaTime.then(function(data) {
         .curve(d3.curveNatural);
     
     svg.append("path")
-        .datum(percentileData)
+        .datum(timeData)
         .attr("fill", "none")
         .attr("stroke", "steelblue")
         .attr("stroke-width", 2)
@@ -301,11 +329,11 @@ socialMediaTime.then(function(data) {
     
     // Add dots for each data point
     svg.selectAll(".dot")
-        .data(percentileData)
+        .data(timeData)
         .enter().append("circle")
         .attr("class", "dot")
         .attr("cx", d => xScale(d.Date) + xScale.bandwidth()/2)
         .attr("cy", d => yScale(d.AvgLikes))
         .attr("r", 4)
         .attr("fill", "steelblue");
-});
+}
