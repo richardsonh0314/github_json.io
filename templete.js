@@ -122,24 +122,24 @@ function createBarPlot(data) {
         d => d.AgeGroup
     );
     
-    // Convert to array format 
+    // Convert to array format with simulated post types
     const avgData = [];
     avgByGroup.forEach((value, key) => {
         // Create multiple entries to simulate platform/post type structure
         avgData.push({
             Platform: key,
             PostType: "Photo",
-            AvgLikes: value * 1.1
+            AvgLikes: value * 1.1  // Photos get 10% more likes
         });
         avgData.push({
             Platform: key,
             PostType: "Video", 
-            AvgLikes: value * 1.2
+            AvgLikes: value * 1.2  // Videos get 20% more likes
         });
         avgData.push({
             Platform: key,
             PostType: "Status",
-            AvgLikes: value * 0.9
+            AvgLikes: value * 0.9  // Status updates get 10% fewer likes
         });
     });
     
@@ -179,7 +179,7 @@ function createBarPlot(data) {
         .range([height, 0]);
       
     const color = d3.scaleOrdinal()
-        .domain([...new Set(avgData.map(d => d.PostType))])
+        .domain(postTypes)  // Changed to use postTypes instead of mapping from data
         .range(["#1f77b4", "#ff7f0e", "#2ca02c"]);    
          
     // Add scales x0 and y     
@@ -194,7 +194,7 @@ function createBarPlot(data) {
     svg.append("text")
         .attr("transform", `translate(${width/2},${height + margin.bottom - 10})`)
         .style("text-anchor", "middle")
-        .text("Platform");
+        .text("Age Group");  // Changed from Platform to Age Group
     
     // Add y-axis label
     svg.append("text")
@@ -222,7 +222,7 @@ function createBarPlot(data) {
     // Add the legend
     const legend = svg.append("g")
         .attr("transform", `translate(${width - 150}, ${margin.top})`);
-    const types = [...new Set(avgData.map(d => d.PostType))];
+    const types = postTypes;  // Use postTypes instead of extracting from data
  
     types.forEach((type, i) => {
         // Alread have the text information for the legend. 
@@ -337,3 +337,4 @@ function createLinePlot(data) {
         .attr("r", 4)
         .attr("fill", "steelblue");
 }
+
