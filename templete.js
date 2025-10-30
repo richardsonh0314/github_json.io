@@ -195,7 +195,7 @@ socialMediaAvg.then(function(data) {
 
     // Add the legend
     const legend = svg.append("g")
-        .attr("transform", `translate(${width - 150}, ${margin.top})`);
+        .attr("transform", `translate(${width + 20}, ${margin.top})`);
 
     const types = [...new Set(data.map(d => d.PostType))];
  
@@ -292,5 +292,6 @@ socialMediaTime.then(function(data) {
         .attr("d", line);
 
 });
+
 
 
