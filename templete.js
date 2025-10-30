@@ -13,8 +13,8 @@ socialMedia.then(function(data) {
     const width = 600 - margin.left - margin.right;
     const height = 400 - margin.top - margin.bottom;
 
-    // Create the SVG container
-    const svg = d3.select("body")
+    // Create the SVG container - APPEND TO #boxplot DIV
+    const svg = d3.select("#boxplot")
         .append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
@@ -123,8 +123,8 @@ socialMediaAvg.then(function(data) {
     const width = 700 - margin.left - margin.right;
     const height = 400 - margin.top - margin.bottom;
 
-    // Create the SVG container
-    const svg = d3.select("body")
+    // Create the SVG container - APPEND TO #barplot DIV
+    const svg = d3.select("#barplot")
         .append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
@@ -234,8 +234,8 @@ socialMediaTime.then(function(data) {
     const width = 600 - margin.left - margin.right;
     const height = 400 - margin.top - margin.bottom;
 
-    // Create the SVG container
-    const svg = d3.select("body")
+    // Create the SVG container - APPEND TO #lineplot DIV
+    const svg = d3.select("#lineplot")
         .append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
@@ -292,6 +292,7 @@ socialMediaTime.then(function(data) {
         .attr("d", line);
 
 });
+
 
 
 
